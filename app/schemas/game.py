@@ -1,0 +1,19 @@
+from datetime import datetime
+
+from pydantic import UUID4, BaseModel
+
+
+class GameCreate(BaseModel):
+    player_id: UUID4
+
+
+class GameResponse(BaseModel):
+    id: UUID4
+    player_id: UUID4
+    max_attempts: int
+    attempts_used: int
+    status: str
+    created_at: datetime
+    # Secret number is deliberately absent here - it never leaves the DB
+
+    model_config = {"from_attributes": True}

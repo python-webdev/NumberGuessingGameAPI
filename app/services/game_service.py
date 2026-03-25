@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.models.game import Game
 from app.models.guess import Guess
-from app.schemas.guess import GuessResult
+from app.schemas.guess import GuessResponse
 
 
 def create_game(db: Session, player_id: str) -> Game:
@@ -39,7 +39,7 @@ def create_game(db: Session, player_id: str) -> Game:
     return game
 
 
-def submit_guess(db: Session, game_id: str, value: int) -> GuessResult:
+def submit_guess(db: Session, game_id: str, value: int) -> GuessResponse:
     game = db.query(Game).filter(Game.id == game_id).first()
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
@@ -79,7 +79,7 @@ def submit_guess(db: Session, game_id: str, value: int) -> GuessResult:
     db.commit()
     db.refresh(game)
 
-    return GuessResult(
+    return GuessResponse(
         result=result,
         attempts_used=game.attempts_used,
         attempts_remaining=game.max_attempts - game.attempts_used,
