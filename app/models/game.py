@@ -1,9 +1,10 @@
 import uuid
 from datetime import datetime, timezone
+from typing import Optional
 
-from sqlalchemy import CheckConstraint, Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy import CheckConstraint, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
@@ -11,17 +12,24 @@ from app.database import Base
 class Game(Base):
     __tablename__ = "games"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    player_id = Column(UUID(as_uuid=True), ForeignKey("players.id"), nullable=False)
-    secret_number = Column(
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    player_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("players.id"), nullable=False
+    )
+    secret_number: Mapped[int] = mapped_column(
         Integer, nullable=False
     )  # NEVER exposed in schema or API responses
-    max_attempts = Column(Integer, nullable=False)
-    attempts_used = Column(Integer, default=0, nullable=False)
-    status = Column(String(20), default="active", nullable=False)  # active, won, lost
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(
-        DateTime,
+    max_attempts: Mapped[int] = mapped_column(Integer, nullable=False)
+    attempts_used: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(20), default="active", nullable=False
+    )  # active, won, lost
+    created_at: Mapped[Optional[datetime]] = mapped_column(
+        default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at: Mapped[Optional[datetime]] = mapped_column(
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
