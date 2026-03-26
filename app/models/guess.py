@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy import CheckConstraint, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -27,6 +27,13 @@ class Guess(Base):
     result: Mapped[str] = mapped_column(String(10), nullable=False)
     created_at: Mapped[Optional[datetime]] = mapped_column(
         default=lambda: datetime.now(timezone.utc)
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "result IN ('too low', 'too high', 'correct')", name="valid_result"
+        ),
+        CheckConstraint("value >= 1", name="guess_min"),
     )
 
     game = relationship("Game", back_populates="guesses")

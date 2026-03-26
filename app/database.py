@@ -11,7 +11,8 @@ class Base(DeclarativeBase):
     pass
 
 
-# Dependency - get_db will be used in every router the API endpoints to get a database session
+# Dependency - get_db will be used in every router the API endpoints
+#  to get a database session
 def get_db():
     db = SessionLocal()
     try:
