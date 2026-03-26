@@ -6,10 +6,11 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.models.game import Game
 from app.models.guess import Guess
+from app.schemas.game import GameResponse
 from app.schemas.guess import GuessResponse
 
 
-def create_game(db: Session, player_id: str) -> Game:
+def create_game(db: Session, player_id: str) -> GameResponse:
     # Check to see if the player already has an active game
     active_game = (
         db.query(Game)
@@ -36,7 +37,7 @@ def create_game(db: Session, player_id: str) -> Game:
     db.add(game)
     db.commit()
     db.refresh(game)
-    return game
+    return GameResponse.model_validate(game)
 
 
 def submit_guess(db: Session, game_id: str, value: int) -> GuessResponse:
@@ -89,17 +90,18 @@ def submit_guess(db: Session, game_id: str, value: int) -> GuessResponse:
     )
 
 
-def get_game(db: Session, game_id: str) -> Game:
+def get_game(db: Session, game_id: str) -> GameResponse:
     game = db.query(Game).filter(Game.id == game_id).first()
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
-    return game
+    return GameResponse.model_validate(game)
 
 
-def get_player_games(db: Session, player_id: str) -> list[Game]:
-    return (
+def get_player_games(db: Session, player_id: str) -> list[GameResponse]:
+    games = (
         db.query(Game)
         .filter(Game.player_id == player_id)
         .order_by(Game.created_at.desc())
         .all()
     )
+    return [GameResponse.model_validate(game) for game in games]
