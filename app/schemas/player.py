@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from pydantic import UUID4, BaseModel, field_validator
 
@@ -25,3 +26,7 @@ class PlayerResponse(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class PlayerSearchParams(BaseModel):
+    username: Optional[str] = None  # Filter by username (partial match)

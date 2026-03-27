@@ -22,3 +22,8 @@ class GameResponse(BaseModel):
 
 class GameFilterParams(BaseModel):
     status: Optional[str] = None  # Filter by game status ("active", "won", "lost")
+
+
+class GameSortParams(BaseModel):
+    sort_by: str = "created_at"  # Default sorting field
+    sort_order: str = "desc"  # Default sorting order ("asc" or "desc")
