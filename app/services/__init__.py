@@ -1,6 +1,14 @@
-from app.services import game_service, player_service
+from .game_service import create_game, get_game, get_player_games, submit_guess
+from .player_service import create_player, get_player_by_id
 
-__all__ = ["game_service", "player_service"]
+__all__ = [
+    "create_game",
+    "submit_guess",
+    "get_game",
+    "get_player_games",
+    "create_player",
+    "get_player_by_id",
+]
 
 
 ## How the Layers Connect

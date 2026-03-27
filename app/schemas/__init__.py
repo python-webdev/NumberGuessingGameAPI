@@ -1,3 +1,11 @@
-from app.schemas.guess import GuessResponse
+from .game import GameCreate, GameResponse
+from .guess import GuessResponse
+from .player import PlayerCreate, PlayerResponse
 
-__all__ = ["GuessResponse"]
+__all__ = [
+    "GuessResponse",
+    "GameCreate",
+    "GameResponse",
+    "PlayerCreate",
+    "PlayerResponse",
+]
