@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from pydantic import UUID4, BaseModel
 
@@ -17,3 +18,7 @@ class GameResponse(BaseModel):
     # Secret number is deliberately absent here - it never leaves the DB
 
     model_config = {"from_attributes": True}
+
+
+class GameFilterParams(BaseModel):
+    status: Optional[str] = None  # Filter by game status ("active", "won", "lost")
