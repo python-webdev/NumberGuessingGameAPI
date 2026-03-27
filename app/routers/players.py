@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 
 from app import services
 from app.database import get_db
-from app.schemas.game import GameFilterParams, GameResponse
+from app.schemas.game import GameFilterParams, GameResponse, GameSortParams
 from app.schemas.pagination import PaginatedResponse, PaginationParams
-from app.schemas.player import PlayerCreate, PlayerResponse
+from app.schemas.player import PlayerCreate, PlayerResponse, PlayerSearchParams
 
 router = APIRouter(prefix="/players", tags=["players"])
 
@@ -17,19 +17,36 @@ def create_player(
     return services.player_service.create_player(db, payload)
 
 
-@router.get("/{player_id}", response_model=PlayerResponse)
-def get_player(player_id: str, db: Session = Depends(get_db)) -> PlayerResponse:
-    return services.player_service.get_player_by_id(db, player_id)
-
-
-@router.get("/{player_id}/games", response_model=PaginatedResponse[GameResponse])
-def get_player_games(
-    player_id: str,
+@router.get("/", response_model=PaginatedResponse[PlayerResponse])
+def search_players(
+    username: str | None = Query(default=None),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=10, ge=1, le=100),
-    status: str | None = Query(default=None, regex="^(active|won|lost)$"),
+    db: Session = Depends(get_db),
+) -> PaginatedResponse[PlayerResponse]:
+    search = PlayerSearchParams(username=username)
+    pagination = PaginationParams(page=page, page_size=page_size)
+    return services.player_service.search_players(db, search, pagination)
+
+
+@router.get("/{id}", response_model=PlayerResponse)
+def get_player(id: str, db: Session = Depends(get_db)) -> PlayerResponse:
+    return services.player_service.get_player_by_id(db, id)
+
+
+@router.get("/{id}/games", response_model=PaginatedResponse[GameResponse])
+def get_player_games(
+    id: str,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=10, ge=1, le=100),
+    status: str | None = Query(default=None),
+    sort_by: str = Query(default="created_at"),
+    order: str = Query(default="desc"),
     db: Session = Depends(get_db),
 ) -> PaginatedResponse[GameResponse]:
     pagination = PaginationParams(page=page, page_size=page_size)
     filters = GameFilterParams(status=status)
-    return services.game_service.get_player_games(db, player_id, pagination, filters)
+    sort = GameSortParams(sort_by=sort_by, order=order)
+    return services.game_service.get_player_games(
+        db, id, pagination, filters, sort
+    )

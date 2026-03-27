@@ -14,13 +14,13 @@ def create_game(payload: GameCreate, db: Session = Depends(get_db)) -> GameRespo
     return services.game_service.create_game(db, str(payload.player_id))
 
 
-@router.get("/{game_id}", response_model=GameResponse)
-def get_game(game_id: str, db: Session = Depends(get_db)) -> GameResponse:
-    return services.game_service.get_game(db, game_id)
+@router.get("/{id}", response_model=GameResponse)
+def get_game(id: str, db: Session = Depends(get_db)) -> GameResponse:
+    return services.game_service.get_game(db, id)
 
 
-@router.post("/{game_id}/guesses", response_model=GuessResponse)
+@router.post("/{id}/guesses", response_model=GuessResponse)
 def submit_guess(
-    game_id: str, payload: GuessCreate, db: Session = Depends(get_db)
+    id: str, payload: GuessCreate, db: Session = Depends(get_db)
 ) -> GuessResponse:
-    return services.game_service.submit_guess(db, game_id, payload.value)
+    return services.game_service.submit_guess(db, id, payload.value)
