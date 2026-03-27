@@ -6,8 +6,9 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.models.game import Game
 from app.models.guess import Guess
-from app.schemas.game import GameResponse
+from app.schemas.game import GameFilterParams, GameResponse
 from app.schemas.guess import GuessResponse
+from app.schemas.pagination import PaginatedResponse, PaginationParams
 
 
 def create_game(db: Session, player_id: str) -> GameResponse:
@@ -97,11 +98,32 @@ def get_game(db: Session, game_id: str) -> GameResponse:
     return GameResponse.model_validate(game)
 
 
-def get_player_games(db: Session, player_id: str) -> list[GameResponse]:
+def get_player_games(
+    db: Session, player_id: str, pagination: PaginationParams, filters: GameFilterParams
+) -> PaginatedResponse[GameResponse]:
+
+    query = db.query(Game).filter(Game.player_id == player_id)
+
+    if filters.status:
+        if filters.status not in ["active", "won", "lost"]:
+            raise HTTPException(status_code=400, detail="Invalid status filter")
+        query = query.filter(Game.status == filters.status)
+
+    total = query.count()
+
     games = (
-        db.query(Game)
-        .filter(Game.player_id == player_id)
-        .order_by(Game.created_at.desc())
+        query.order_by(Game.created_at.desc())
+        .offset(pagination.offset)
+        .limit(pagination.page_size)
         .all()
     )
-    return [GameResponse.model_validate(game) for game in games]
+
+    total_pages = (total + pagination.page_size - 1) // pagination.page_size
+
+    return PaginatedResponse[GameResponse](
+        items=[GameResponse.model_validate(game) for game in games],
+        total=total,
+        page=pagination.page,
+        page_size=pagination.page_size,
+        total_pages=total_pages,
+    )
