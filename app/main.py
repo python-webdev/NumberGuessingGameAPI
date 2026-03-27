@@ -7,13 +7,13 @@ from app.routers import games, players
 # Create tables
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Number Guessing Game API", version="1.0.0")
+app = FastAPI(title="Number Guessing Game API", version="1.1")
 
 # Register exception handlers
 register_exception_handlers(app)
 
-app.include_router(players.router)
-app.include_router(games.router)
+app.include_router(players.router, prefix="/api/v1.1")
+app.include_router(games.router, prefix="/api/v1.1")
 
 
 @app.get("/health")
