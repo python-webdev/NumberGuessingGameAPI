@@ -26,4 +26,4 @@ class GameFilterParams(BaseModel):
 
 class GameSortParams(BaseModel):
     sort_by: str = "created_at"  # Default sorting field
-    sort_order: str = "desc"  # Default sorting order ("asc" or "desc")
+    order: str = "desc"  # Default sorting order ("asc" or "desc")

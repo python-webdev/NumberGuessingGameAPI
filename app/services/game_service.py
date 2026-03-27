@@ -1,12 +1,13 @@
 import random
 
 from fastapi import HTTPException
+from sqlalchemy import asc, desc
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.models.game import Game
 from app.models.guess import Guess
-from app.schemas.game import GameFilterParams, GameResponse
+from app.schemas.game import GameFilterParams, GameResponse, GameSortParams
 from app.schemas.guess import GuessResponse
 from app.schemas.pagination import PaginatedResponse, PaginationParams
 
@@ -99,7 +100,11 @@ def get_game(db: Session, game_id: str) -> GameResponse:
 
 
 def get_player_games(
-    db: Session, player_id: str, pagination: PaginationParams, filters: GameFilterParams
+    db: Session,
+    player_id: str,
+    pagination: PaginationParams,
+    filters: GameFilterParams,
+    sort: GameSortParams,
 ) -> PaginatedResponse[GameResponse]:
 
     query = db.query(Game).filter(Game.player_id == player_id)
@@ -109,14 +114,19 @@ def get_player_games(
             raise HTTPException(status_code=400, detail="Invalid status filter")
         query = query.filter(Game.status == filters.status)
 
+    ALLOWED_SORT_FIELDS: set[str] = {"created_at", "attempts_used", "status"}
+
+    if sort.sort_by not in ALLOWED_SORT_FIELDS:
+        raise HTTPException(status_code=400, detail=f"Cannot sort by {sort.sort_by}")
+
+    sort_column = getattr(Game, sort.sort_by)
+    query = query.order_by(
+        desc(sort_column) if sort.order == "desc" else asc(sort_column)
+    )
+
     total = query.count()
 
-    games = (
-        query.order_by(Game.created_at.desc())
-        .offset(pagination.offset)
-        .limit(pagination.page_size)
-        .all()
-    )
+    games = query.offset(pagination.offset).limit(pagination.page_size).all()
 
     total_pages = (total + pagination.page_size - 1) // pagination.page_size
 
