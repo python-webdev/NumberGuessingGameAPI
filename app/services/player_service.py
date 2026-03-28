@@ -3,7 +3,12 @@ from sqlalchemy.orm import Session
 
 from app.models.player import Player
 from app.schemas.pagination import PaginatedResponse, PaginationParams
-from app.schemas.player import PlayerCreate, PlayerResponse, PlayerSearchParams
+from app.schemas.player import (
+    PlayerCreate,
+    PlayerResponse,
+    PlayerSearchParams,
+    PlayerUpdate,
+)
 
 
 def create_player(db: Session, payload: PlayerCreate) -> PlayerResponse:
@@ -52,6 +57,27 @@ def search_players(
         page_size=pagination.page_size,
         total_pages=-(-total // pagination.page_size),
     )
+
+
+def update_player(db: Session, player_id: str, payload: PlayerUpdate) -> PlayerResponse:
+    player = db.query(Player).filter(Player.id == player_id).first()
+    if not player:
+        raise HTTPException(status_code=404, detail="Player not found")
+
+    # Check if the new username already exists for another player
+    existing_player = (
+        db.query(Player)
+        .filter(Player.username == payload.username, Player.id != player_id)
+        .first()
+    )
+    if existing_player:
+        raise HTTPException(status_code=400, detail="Username already exists")
+
+    player.username = payload.username
+    db.commit()
+    db.refresh(player)
+
+    return PlayerResponse.model_validate(player)
 
 
 def get_player_by_id(db: Session, player_id: str) -> PlayerResponse:
