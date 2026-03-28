@@ -23,4 +23,9 @@ def get_game(id: str, db: Session = Depends(get_db)) -> GameResponse:
 def submit_guess(
     id: str, payload: GuessCreate, db: Session = Depends(get_db)
 ) -> GuessResponse:
-    return services.game_service.submit_guess(db, id, payload.value)
+    response = services.game_service.submit_guess(db, id, payload.value)
+    if response.result == "too low":
+        response.result = "too_low"
+    elif response.result == "too high":
+        response.result = "too_high"
+    return response
