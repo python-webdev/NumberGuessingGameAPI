@@ -8,8 +8,8 @@ app = FastAPI(title="Number Guessing Game API", version="1.1")
 # Register exception handlers
 register_exception_handlers(app)
 
-app.include_router(players.router, prefix="/api/v1.1")
-app.include_router(games.router, prefix="/api/v1.1")
+app.include_router(players.router, prefix="/api/v1")
+app.include_router(games.router, prefix="/api/v1")
 
 
 @app.get("/health")
