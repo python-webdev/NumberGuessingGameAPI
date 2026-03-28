@@ -5,7 +5,12 @@ from app import services
 from app.database import get_db
 from app.schemas.game import GameFilterParams, GameResponse, GameSortParams
 from app.schemas.pagination import PaginatedResponse, PaginationParams
-from app.schemas.player import PlayerCreate, PlayerResponse, PlayerSearchParams
+from app.schemas.player import (
+    PlayerCreate,
+    PlayerResponse,
+    PlayerSearchParams,
+    PlayerUpdate,
+)
 
 router = APIRouter(prefix="/players", tags=["players"])
 
@@ -47,6 +52,13 @@ def get_player_games(
     pagination = PaginationParams(page=page, page_size=page_size)
     filters = GameFilterParams(status=status)
     sort = GameSortParams(sort_by=sort_by, order=order)
-    return services.game_service.get_player_games(
-        db, id, pagination, filters, sort
-    )
+    return services.game_service.get_player_games(db, id, pagination, filters, sort)
+
+
+@router.put("/{id}", response_model=PlayerResponse)
+def update_player(
+    id: str,
+    payload: PlayerUpdate,
+    db: Session = Depends(get_db),
+) -> PlayerResponse:
+    return services.player_service.update_player(db, id, payload)
