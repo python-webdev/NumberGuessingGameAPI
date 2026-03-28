@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from typing import Optional
 
@@ -10,8 +11,8 @@ def validate_username(value: str) -> str:
         raise ValueError("Username must be at least 3 characters long")
     if len(username) > 50:
         raise ValueError("Username must be at most 50 characters long")
-    if not username.isalnum():
-        raise ValueError("Username must be alphanumeric only")
+    if not re.fullmatch(r"[A-Za-z0-9_]+", username):
+        raise ValueError("Username must contain only letters, numbers, and underscores")
     return username
 
 
