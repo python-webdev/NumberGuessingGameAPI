@@ -1,6 +1,9 @@
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+filterwarnings = [
+  'ignore:Please use `import python_multipart` instead\.:PendingDeprecationWarning:starlette\.formparsers',
+]
 
 [tool.ruff]
 line-length = 88
