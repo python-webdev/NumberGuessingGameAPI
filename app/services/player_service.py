@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
@@ -25,8 +27,21 @@ def create_player(db: Session, payload: PlayerCreate) -> PlayerResponse:
     return PlayerResponse.model_validate(new_player)
 
 
+def _to_uuid_or_none(value: str | uuid.UUID) -> uuid.UUID | None:
+    if isinstance(value, uuid.UUID):
+        return value
+    try:
+        return uuid.UUID(str(value))
+    except (TypeError, ValueError, AttributeError):
+        return None
+
+
 def get_player(db: Session, player_id: str) -> PlayerResponse:
-    player = db.query(Player).filter(Player.id == player_id).first()
+    normalized_id = _to_uuid_or_none(player_id)
+    if normalized_id is None:
+        raise HTTPException(status_code=404, detail="Player not found")
+
+    player = db.query(Player).filter(Player.id == normalized_id).first()
     if not player:
         raise HTTPException(status_code=404, detail="Player not found")
     return PlayerResponse.model_validate(player)
@@ -60,14 +75,18 @@ def search_players(
 
 
 def update_player(db: Session, player_id: str, payload: PlayerUpdate) -> PlayerResponse:
-    player = db.query(Player).filter(Player.id == player_id).first()
+    normalized_id = _to_uuid_or_none(player_id)
+    if normalized_id is None:
+        raise HTTPException(status_code=404, detail="Player not found")
+
+    player = db.query(Player).filter(Player.id == normalized_id).first()
     if not player:
         raise HTTPException(status_code=404, detail="Player not found")
 
     # Check if the new username already exists for another player
     existing_player = (
         db.query(Player)
-        .filter(Player.username == payload.username, Player.id != player_id)
+        .filter(Player.username == payload.username, Player.id != normalized_id)
         .first()
     )
     if existing_player:
@@ -81,7 +100,11 @@ def update_player(db: Session, player_id: str, payload: PlayerUpdate) -> PlayerR
 
 
 def get_player_by_id(db: Session, player_id: str) -> PlayerResponse:
-    player = db.query(Player).filter(Player.id == player_id).first()
+    normalized_id = _to_uuid_or_none(player_id)
+    if normalized_id is None:
+        raise HTTPException(status_code=404, detail="Player not found")
+
+    player = db.query(Player).filter(Player.id == normalized_id).first()
     if not player:
         raise HTTPException(status_code=404, detail="Player not found")
     return PlayerResponse.model_validate(player)

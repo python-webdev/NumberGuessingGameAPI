@@ -1,4 +1,5 @@
 import random
+import uuid
 
 from fastapi import HTTPException
 from sqlalchemy import asc, desc
@@ -12,11 +13,24 @@ from app.schemas.guess import GuessResponse
 from app.schemas.pagination import PaginatedResponse, PaginationParams
 
 
+def _to_uuid_or_none(value: str | uuid.UUID) -> uuid.UUID | None:
+    if isinstance(value, uuid.UUID):
+        return value
+    try:
+        return uuid.UUID(str(value))
+    except (TypeError, ValueError, AttributeError):
+        return None
+
+
 def create_game(db: Session, player_id: str) -> GameResponse:
+    normalized_player_id = _to_uuid_or_none(player_id)
+    if normalized_player_id is None:
+        raise HTTPException(status_code=404, detail="Player not found")
+
     # Check to see if the player already has an active game
     active_game = (
         db.query(Game)
-        .filter(Game.player_id == player_id, Game.status == "active")
+        .filter(Game.player_id == normalized_player_id, Game.status == "active")
         .first()
     )
     if active_game:
@@ -29,7 +43,7 @@ def create_game(db: Session, player_id: str) -> GameResponse:
     secret_number = random.randint(settings.NUMBER_RANGE_MIN, settings.NUMBER_RANGE_MAX)
 
     game = Game(
-        player_id=player_id,
+        player_id=normalized_player_id,
         secret_number=secret_number,
         max_attempts=settings.MAX_ATTEMPTS,
         attempts_used=0,
@@ -43,16 +57,17 @@ def create_game(db: Session, player_id: str) -> GameResponse:
 
 
 def submit_guess(db: Session, game_id: str, value: int) -> GuessResponse:
-    game = db.query(Game).filter(Game.id == game_id).first()
+    normalized_game_id = _to_uuid_or_none(game_id)
+    if normalized_game_id is None:
+        raise HTTPException(status_code=404, detail="Game not found")
+
+    game = db.query(Game).filter(Game.id == normalized_game_id).first()
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
 
     # Invariant 1: cannot guess on a finished game
     if game.status != "active":
-        raise HTTPException(
-            status_code=400,
-            detail=f"Game is already {game.status}. No more guesses allowed.",
-        )
+        raise HTTPException(status_code=400, detail="Game is already finished.")
 
     # Invariant 2: cannot exceed max attempts (double safety - DB constraint is first)
     if game.attempts_used >= game.max_attempts:
@@ -70,7 +85,7 @@ def submit_guess(db: Session, game_id: str, value: int) -> GuessResponse:
     guess = Guess(game_id=game.id, value=value, result=result)
     db.add(guess)
 
-    # Update game state    game.attempts_used += 1
+    # Update game state
     game.attempts_used += 1
 
     if result == "correct":
@@ -93,7 +108,11 @@ def submit_guess(db: Session, game_id: str, value: int) -> GuessResponse:
 
 
 def get_game(db: Session, game_id: str) -> GameResponse:
-    game = db.query(Game).filter(Game.id == game_id).first()
+    normalized_game_id = _to_uuid_or_none(game_id)
+    if normalized_game_id is None:
+        raise HTTPException(status_code=404, detail="Game not found")
+
+    game = db.query(Game).filter(Game.id == normalized_game_id).first()
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
     return GameResponse.model_validate(game)
@@ -106,8 +125,17 @@ def get_player_games(
     filters: GameFilterParams,
     sort: GameSortParams,
 ) -> PaginatedResponse[GameResponse]:
+    normalized_player_id = _to_uuid_or_none(player_id)
+    if normalized_player_id is None:
+        return PaginatedResponse[GameResponse](
+            items=[],
+            total=0,
+            page=pagination.page,
+            page_size=pagination.page_size,
+            total_pages=0,
+        )
 
-    query = db.query(Game).filter(Game.player_id == player_id)
+    query = db.query(Game).filter(Game.player_id == normalized_player_id)
 
     if filters.status:
         if filters.status not in ["active", "won", "lost"]:
