@@ -1,11 +1,7 @@
 from fastapi import FastAPI
 
 from app.core.errors import register_exception_handlers
-from app.database import Base, engine
 from app.routers import games, players
-
-# Create tables
-Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Number Guessing Game API", version="1.1")
 
