@@ -21,7 +21,9 @@ class GameResponse(BaseModel):
 
 
 class GameFilterParams(BaseModel):
-    status: Optional[str] = None  # Filter by game status ("active", "won", "lost")
+    status: Optional[str] = (
+        None  # Filter by game status ("active", "won", "lost")
+    )
 
 
 class GameSortParams(BaseModel):
