@@ -15,14 +15,28 @@ from app.schemas.player import (
 router = APIRouter(prefix="/players", tags=["players"])
 
 
-@router.post("/", response_model=PlayerResponse, status_code=201)
+@router.post(
+    "/",
+    response_model=PlayerResponse,
+    status_code=201,
+    summary="Create a new player",
+    description=(
+        "Create a new player with a unique username. "
+        "Returns the created player profile."
+    ),
+)
 def create_player(
     payload: PlayerCreate, db: Session = Depends(get_db)
 ) -> PlayerResponse:
     return services.player_service.create_player(db, payload)
 
 
-@router.get("/", response_model=PaginatedResponse[PlayerResponse])
+@router.get(
+    "/",
+    response_model=PaginatedResponse[PlayerResponse],
+    summary="Search players",
+    description=("Search for players by username. Supports pagination."),
+)
 def search_players(
     username: str | None = Query(default=None),
     page: int = Query(default=1, ge=1),
@@ -34,12 +48,22 @@ def search_players(
     return services.player_service.search_players(db, search, pagination)
 
 
-@router.get("/{id}", response_model=PlayerResponse)
+@router.get(
+    "/{id}",
+    response_model=PlayerResponse,
+    summary="Get player by ID",
+    description="Retrieve a player's profile by their unique ID.",
+)
 def get_player(id: str, db: Session = Depends(get_db)) -> PlayerResponse:
     return services.player_service.get_player_by_id(db, id)
 
 
-@router.get("/{id}/games", response_model=PaginatedResponse[GameResponse])
+@router.get(
+    "/{id}/games",
+    response_model=PaginatedResponse[GameResponse],
+    summary="Get player's games",
+    description="Retrieve a list of games played by a specific player.",
+)
 def get_player_games(
     id: str,
     page: int = Query(default=1, ge=1),
@@ -57,7 +81,12 @@ def get_player_games(
     )
 
 
-@router.put("/{id}", response_model=PlayerResponse)
+@router.put(
+    "/{id}",
+    response_model=PlayerResponse,
+    summary="Update player",
+    description="Update a player's profile by their unique ID.",
+)
 def update_player(
     id: str,
     payload: PlayerUpdate,

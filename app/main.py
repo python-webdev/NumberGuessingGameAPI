@@ -35,7 +35,27 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Number Guessing Game API", version="1.1", lifespan=lifespan
+    title="Number Guessing Game API",
+    version="1.1",
+    lifespan=lifespan,
+    description=""" A backend API for a number guessing game.
+
+## Features
+- Create players and manage their profiles
+- Start games and submit guesses
+- Track game history with pagination, filtering and sorting
+
+## Rules
+- Each game generates a secret number between 1 and 100
+- Players have 10 attempts to guess correctly
+- Responses tell you if your guess is too low, too high, or correct
+    """,
+    contact={
+        "name": "Number Guessing Game API",
+    },
+    license_info={
+        "name": "MIT",
+    },
 )
 
 # Middleware for logging requests
