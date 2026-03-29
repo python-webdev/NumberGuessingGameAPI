@@ -15,7 +15,9 @@ class Player(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-    username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    username: Mapped[str] = mapped_column(
+        String(50), unique=True, nullable=False
+    )
     created_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )

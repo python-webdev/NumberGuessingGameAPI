@@ -22,7 +22,9 @@ class Game(Base):
         Integer, nullable=False
     )  # NEVER exposed in schema or API responses
     max_attempts: Mapped[int] = mapped_column(Integer, nullable=False)
-    attempts_used: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    attempts_used: Mapped[int] = mapped_column(
+        Integer, default=0, nullable=False
+    )
     status: Mapped[str] = mapped_column(
         String(20), default="active", nullable=False
     )  # active, won, lost
@@ -36,9 +38,13 @@ class Game(Base):
 
     # Invariants enforced at DB level
     __table_args__ = (
-        CheckConstraint("status IN ('active', 'won', 'lost')", name="valid_status"),
+        CheckConstraint(
+            "status IN ('active', 'won', 'lost')", name="valid_status"
+        ),
         CheckConstraint("attempts_used >= 0", name="attempts_non_negative"),
-        CheckConstraint("attempts_used <= max_attempts", name="attempts_within_limit"),
+        CheckConstraint(
+            "attempts_used <= max_attempts", name="attempts_within_limit"
+        ),
         CheckConstraint("secret_number >= 1", name="secret_min"),
     )
 
