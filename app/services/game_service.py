@@ -1,11 +1,13 @@
 import random
 import uuid
+from typing import cast
 
 from fastapi import HTTPException
 from sqlalchemy import asc, desc
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.logging import logger
 from app.models.game import Game
 from app.models.guess import Guess
 from app.schemas.game import GameFilterParams, GameResponse, GameSortParams
@@ -40,7 +42,9 @@ def create_game(db: Session, player_id: str) -> GameResponse:
         )
 
     # Secret number generation - never touch the API layer
-    secret_number = random.randint(settings.NUMBER_RANGE_MIN, settings.NUMBER_RANGE_MAX)
+    secret_number = random.randint(
+        settings.NUMBER_RANGE_MIN, settings.NUMBER_RANGE_MAX
+    )
 
     game = Game(
         player_id=normalized_player_id,
@@ -53,6 +57,15 @@ def create_game(db: Session, player_id: str) -> GameResponse:
     db.add(game)
     db.commit()
     db.refresh(game)
+
+    logger.info(
+        "game created",
+        extra={
+            "player_id": player_id,
+            "game_id": str(game.id),
+            "max_attempts": game.max_attempts,
+        },
+    )
     return GameResponse.model_validate(game)
 
 
@@ -69,7 +82,8 @@ def submit_guess(db: Session, game_id: str, value: int) -> GuessResponse:
     if game.status != "active":
         raise HTTPException(status_code=400, detail="Game is already finished.")
 
-    # Invariant 2: cannot exceed max attempts (double safety - DB constraint is first)
+    # Invariant 2: cannot exceed max attempts
+    # (double safety - DB constraint is first)
     if game.attempts_used >= game.max_attempts:
         raise HTTPException(status_code=400, detail="No attempts remaining.")
 
@@ -97,13 +111,41 @@ def submit_guess(db: Session, game_id: str, value: int) -> GuessResponse:
     db.commit()
     db.refresh(game)
 
+    # cast() breaks Pyright's control-flow narrowing from the
+    # earlier != "active" guard
+    current_status = cast(str, game.status)
+
+    logger.info(
+        "guess submitted",
+        extra={
+            "game_id": game_id,
+            "value": value,
+            "result": result,
+            "attempts_used": game.attempts_used,
+            "attempts_remaining": game.max_attempts - game.attempts_used,
+            "status": current_status,
+        },
+    )
+
+    if current_status in ("won", "lost"):
+        logger.info(
+            "game finished",
+            extra={
+                "game_id": game_id,
+                "status": current_status,
+                "attempts_used": game.attempts_used,
+            },
+        )
+
     return GuessResponse(
         result=result,
         attempts_used=game.attempts_used,
         attempts_remaining=game.max_attempts - game.attempts_used,
-        status=game.status,
+        status=current_status,
         # Only reveal the secret number if the game is over
-        secret_number=game.secret_number if game.status != "active" else None,
+        secret_number=game.secret_number
+        if current_status != "active"
+        else None,
     )
 
 
@@ -145,7 +187,9 @@ def get_player_games(
     ALLOWED_SORT_FIELDS: set[str] = {"created_at", "attempts_used", "status"}
 
     if sort.sort_by not in ALLOWED_SORT_FIELDS:
-        raise HTTPException(status_code=400, detail=f"Cannot sort by {sort.sort_by}")
+        raise HTTPException(
+            status_code=400, detail=f"Cannot sort by {sort.sort_by}"
+        )
 
     sort_column = getattr(Game, sort.sort_by)
     query = query.order_by(
