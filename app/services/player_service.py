@@ -74,7 +74,9 @@ def search_players(
     )
 
 
-def update_player(db: Session, player_id: str, payload: PlayerUpdate) -> PlayerResponse:
+def update_player(
+    db: Session, player_id: str, payload: PlayerUpdate
+) -> PlayerResponse:
     normalized_id = _to_uuid_or_none(player_id)
     if normalized_id is None:
         raise HTTPException(status_code=404, detail="Player not found")
