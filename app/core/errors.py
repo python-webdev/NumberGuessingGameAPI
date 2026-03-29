@@ -20,7 +20,9 @@ async def validation_error_handler(
     )
 
 
-async def not_found_handler(_request: Request, exc: HTTPException) -> JSONResponse:
+async def not_found_handler(
+    _request: Request, exc: HTTPException
+) -> JSONResponse:
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -31,7 +33,9 @@ async def not_found_handler(_request: Request, exc: HTTPException) -> JSONRespon
     )
 
 
-async def server_error_handler(_request: Request, exc: Exception) -> JSONResponse:
+async def server_error_handler(
+    _request: Request, exc: Exception
+) -> JSONResponse:
     return JSONResponse(
         status_code=500,
         content={
@@ -46,5 +50,9 @@ def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(
         RequestValidationError, cast(ExceptionHandler, validation_error_handler)
     )
-    app.add_exception_handler(HTTPException, cast(ExceptionHandler, not_found_handler))
-    app.add_exception_handler(Exception, cast(ExceptionHandler, server_error_handler))
+    app.add_exception_handler(
+        HTTPException, cast(ExceptionHandler, not_found_handler)
+    )
+    app.add_exception_handler(
+        Exception, cast(ExceptionHandler, server_error_handler)
+    )
