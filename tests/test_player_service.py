@@ -37,7 +37,9 @@ class TestGetPlayer:
 
 class TestUpdatePlayer:
     def test_update_username_successfully(self, db: Session) -> None:
-        player = create_player(db, payload=PlayerCreate(username="player_to_update"))
+        player = create_player(
+            db, payload=PlayerCreate(username="player_to_update")
+        )
         updated_player = update_player(
             db,
             player_id=str(player.id),

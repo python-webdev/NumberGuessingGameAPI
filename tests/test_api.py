@@ -3,7 +3,9 @@ from fastapi.testclient import TestClient
 
 class TestPlayerEndpoints:
     def test_create_player(self, client: TestClient) -> None:
-        response = client.post("/api/v1/players/", json={"username": "testuser"})
+        response = client.post(
+            "/api/v1/players/", json={"username": "testuser"}
+        )
         assert response.status_code == 201
         assert response.json()["username"] == "testuser"
 
@@ -19,7 +21,9 @@ class TestPlayerEndpoints:
         assert response.json()["id"] == player_id
 
     def test_get_player_not_found(self, client: TestClient) -> None:
-        response = client.get("/api/v1/players/00000000-0000-0000-0000-000000000000")
+        response = client.get(
+            "/api/v1/players/00000000-0000-0000-0000-000000000000"
+        )
         assert response.status_code == 404
 
     def test_update_player_username(self, client: TestClient) -> None:
@@ -58,7 +62,9 @@ class TestGameEndpoints:
         player_id = player.json()["id"]
         game = client.post("/api/v1/games/", json={"player_id": player_id})
         game_id = game.json()["id"]
-        response = client.post(f"/api/v1/games/{game_id}/guesses", json={"value": 50})
+        response = client.post(
+            f"/api/v1/games/{game_id}/guesses", json={"value": 50}
+        )
         assert response.status_code == 200
         assert response.json()["result"] in ("too_low", "too_high", "correct")
 
@@ -67,7 +73,9 @@ class TestGameEndpoints:
         player_id = player.json()["id"]
         game = client.post("/api/v1/games/", json={"player_id": player_id})
         game_id = game.json()["id"]
-        response = client.post(f"/api/v1/games/{game_id}/guesses", json={"value": 999})
+        response = client.post(
+            f"/api/v1/games/{game_id}/guesses", json={"value": 999}
+        )
         assert response.status_code == 422
 
 
@@ -75,4 +83,6 @@ class TestHealthCheck:
     def test_health_check(self, client: TestClient) -> None:
         response = client.get("/health")
         assert response.status_code == 200
-        assert response.json() == {"status": "ok"}
+        data = response.json()
+        assert data["status"] == "ok"
+        assert data["checks"]["database"]["status"] == "healthy"

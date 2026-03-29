@@ -11,7 +11,9 @@ from app.database import Base, get_db
 from app.main import app
 
 # Separate test database URL - never use production database for testing
-TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "sqlite+pysqlite:///:memory:")
+TEST_DATABASE_URL = os.getenv(
+    "TEST_DATABASE_URL", "sqlite+pysqlite:///:memory:"
+)
 
 engine_kwargs: dict[str, object] = {}
 if TEST_DATABASE_URL.startswith("sqlite"):
@@ -22,7 +24,9 @@ if TEST_DATABASE_URL.startswith("sqlite"):
     }
 
 test_engine = create_engine(TEST_DATABASE_URL, **engine_kwargs)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+TestingSessionLocal = sessionmaker(
+    autocommit=False, autoflush=False, bind=test_engine
+)
 
 
 @pytest.fixture(scope="function")

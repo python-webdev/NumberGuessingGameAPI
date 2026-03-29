@@ -10,13 +10,17 @@ from app.services.player_service import create_player
 
 class TestCreateGame:
     def test_create_game_successfully(self, db: Session) -> None:
-        player = create_player(db, payload=PlayerCreate(username="game_creator"))
+        player = create_player(
+            db, payload=PlayerCreate(username="game_creator")
+        )
         game = create_game(db, str(player.id))
         assert game.status == "active"
         assert game.attempts_used == 0
 
     def test_raises_if_active_game_exists(self, db: Session) -> None:
-        player = create_player(db, payload=PlayerCreate(username="active_game_player"))
+        player = create_player(
+            db, payload=PlayerCreate(username="active_game_player")
+        )
         create_game(db, str(player.id))
         with pytest.raises(HTTPException) as exc_info:
             create_game(db, str(player.id))
@@ -29,7 +33,9 @@ class TestCreateGame:
 
 class TestSubmitGuess:
     def test_returns_too_low(self, db: Session) -> None:
-        player = create_player(db, payload=PlayerCreate(username="guess_tester"))
+        player = create_player(
+            db, payload=PlayerCreate(username="guess_tester")
+        )
         game = create_game(db, str(player.id))
         # Manually set the secret number for testing
         game_in_db = db.query(Game).filter(Game.id == game.id).first()
@@ -41,7 +47,9 @@ class TestSubmitGuess:
         assert guess_response.result == "too low"
 
     def test_returns_too_high(self, db: Session) -> None:
-        player = create_player(db, payload=PlayerCreate(username="guess_tester2"))
+        player = create_player(
+            db, payload=PlayerCreate(username="guess_tester2")
+        )
         game = create_game(db, str(player.id))
         # Manually set the secret number for testing
         game_in_db = db.query(Game).filter(Game.id == game.id).first()
@@ -53,7 +61,9 @@ class TestSubmitGuess:
         assert guess_response.result == "too high"
 
     def test_correct_guess_wins_game(self, db: Session) -> None:
-        player = create_player(db, payload=PlayerCreate(username="winner_tester"))
+        player = create_player(
+            db, payload=PlayerCreate(username="winner_tester")
+        )
         game = create_game(db, str(player.id))
         # Manually set the secret number for testing
         game_in_db = db.query(Game).filter(Game.id == game.id).first()
@@ -99,7 +109,9 @@ class TestSubmitGuess:
         assert guess_response.secret_number is None
 
     def test_game_lost_when_attemps_exhausted(self, db: Session) -> None:
-        player = create_player(db, payload=PlayerCreate(username="loser_tester"))
+        player = create_player(
+            db, payload=PlayerCreate(username="loser_tester")
+        )
         game = create_game(db, str(player.id))
         # Manually set the secret number and max attempts for testing
         game_in_db = db.query(Game).filter(Game.id == game.id).first()
@@ -109,7 +121,9 @@ class TestSubmitGuess:
         db.commit()
 
         submit_guess(db, game_id=str(game.id), value=1)  # Attempt 1
-        submit_guess(db, game_id=str(game.id), value=2)  # Attempt 2 - should lose
+        submit_guess(
+            db, game_id=str(game.id), value=2
+        )  # Attempt 2 - should lose
 
         updated_game = db.query(Game).filter(Game.id == game.id).first()
         assert updated_game is not None
@@ -128,10 +142,14 @@ class TestSubmitGuess:
         game_in_db.max_attempts = 1
         db.commit()
 
-        submit_guess(db, game_id=str(game.id), value=1)  # Attempt 1 - should lose
+        submit_guess(
+            db, game_id=str(game.id), value=1
+        )  # Attempt 1 - should lose
 
         with pytest.raises(HTTPException) as exc_info:
-            submit_guess(db, game_id=str(game.id), value=5)  # Attempt on finished game
+            submit_guess(
+                db, game_id=str(game.id), value=5
+            )  # Attempt on finished game
         assert exc_info.value.status_code == 400
         assert exc_info.value.detail == "Game is already finished."
 
