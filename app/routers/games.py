@@ -10,7 +10,9 @@ router = APIRouter(prefix="/games", tags=["games"])
 
 
 @router.post("/", response_model=GameResponse, status_code=201)
-def create_game(payload: GameCreate, db: Session = Depends(get_db)) -> GameResponse:
+def create_game(
+    payload: GameCreate, db: Session = Depends(get_db)
+) -> GameResponse:
     return services.game_service.create_game(db, str(payload.player_id))
 
 

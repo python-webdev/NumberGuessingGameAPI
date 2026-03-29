@@ -52,7 +52,9 @@ def get_player_games(
     pagination = PaginationParams(page=page, page_size=page_size)
     filters = GameFilterParams(status=status)
     sort = GameSortParams(sort_by=sort_by, order=order)
-    return services.game_service.get_player_games(db, id, pagination, filters, sort)
+    return services.game_service.get_player_games(
+        db, id, pagination, filters, sort
+    )
 
 
 @router.put("/{id}", response_model=PlayerResponse)
