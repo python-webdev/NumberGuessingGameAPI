@@ -1,7 +1,6 @@
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI
-from pydantic import BaseModel
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -11,18 +10,8 @@ from app.core.logging import logger
 from app.core.middleware import RequestLoggingMiddleware
 from app.database import get_db
 from app.routers import games, players
-
-
-class DatabaseCheck(BaseModel):
-    # Database health check result
-    status: str
-
-
-class HealthResponse(BaseModel):
-    # Health check response schema
-    status: str
-    version: str
-    checks: dict[str, DatabaseCheck]
+from app.schemas.database import DatabaseCheck
+from app.schemas.health import HealthResponse
 
 
 @asynccontextmanager
