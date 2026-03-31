@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from app import services
+from app.core.rate_limit import limiter
 from app.database import get_db
 from app.schemas.game import GameCreate, GameResponse
 from app.schemas.guess import GuessCreate, GuessResponse
@@ -45,8 +46,12 @@ def get_game(id: str, db: Session = Depends(get_db)) -> GameResponse:
         "or correct."
     ),
 )
+@limiter.limit("30/minute")  # type: ignore[misc]
 def submit_guess(
-    id: str, payload: GuessCreate, db: Session = Depends(get_db)
+    id: str,
+    payload: GuessCreate,
+    request: Request,  # pylint: disable=unused-argument
+    db: Session = Depends(get_db),
 ) -> GuessResponse:
     response = services.game_service.submit_guess(db, id, payload.value)
     if response.result == "too low":

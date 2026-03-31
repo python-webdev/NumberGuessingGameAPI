@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.orm import Session
 
 from app import services
+from app.core.rate_limit import limiter
 from app.database import get_db
 from app.schemas.game import GameFilterParams, GameResponse, GameSortParams
 from app.schemas.pagination import PaginatedResponse, PaginationParams
@@ -25,8 +26,11 @@ router = APIRouter(prefix="/players", tags=["players"])
         "Returns the created player profile."
     ),
 )
+@limiter.limit("10/minute")  # type: ignore[misc]
 def create_player(
-    payload: PlayerCreate, db: Session = Depends(get_db)
+    payload: PlayerCreate,
+    request: Request,  # pylint: disable=unused-argument
+    db: Session = Depends(get_db),
 ) -> PlayerResponse:
     return services.player_service.create_player(db, payload)
 

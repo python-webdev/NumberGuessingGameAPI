@@ -1,13 +1,18 @@
 from contextlib import asynccontextmanager
+from typing import cast
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
+from starlette.responses import Response
 
 from app.core.errors import register_exception_handlers
 from app.core.health import check_database
 from app.core.logging import logger
 from app.core.middleware import RequestLoggingMiddleware
+from app.core.rate_limit import limiter
 from app.database import get_db
 from app.routers import games, players
 from app.schemas.database import DatabaseCheck
@@ -21,6 +26,10 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown event
     logger.info("Application is shutting down")
+
+
+def rate_limit_exceeded_handler(request: Request, exc: Exception) -> Response:
+    return _rate_limit_exceeded_handler(request, cast(RateLimitExceeded, exc))
 
 
 app = FastAPI(
@@ -46,6 +55,10 @@ app = FastAPI(
         "name": "MIT",
     },
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+
 
 # Middleware for logging requests
 app.add_middleware(RequestLoggingMiddleware)
