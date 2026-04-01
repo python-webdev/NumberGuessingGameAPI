@@ -18,6 +18,7 @@ class Player(Base):
     username: Mapped[str] = mapped_column(
         String(50), unique=True, nullable=False
     )
+    password: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
