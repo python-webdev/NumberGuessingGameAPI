@@ -3,7 +3,9 @@ from sqlalchemy.orm import Session
 
 from app import services
 from app.core.rate_limit import limiter
+from app.core.security import get_current_player
 from app.database import get_db
+from app.models.player import Player
 from app.schemas.game import GameCreate, GameResponse
 from app.schemas.guess import GuessCreate, GuessResponse
 
@@ -20,9 +22,11 @@ router = APIRouter(prefix="/games", tags=["games"])
     ),
 )
 def create_game(
-    payload: GameCreate, db: Session = Depends(get_db)
+    payload: GameCreate,  # pylint: disable=unused-argument
+    db: Session = Depends(get_db),
+    current_player: Player = Depends(get_current_player),
 ) -> GameResponse:
-    return services.game_service.create_game(db, str(payload.player_id))
+    return services.game_service.create_game(db, str(current_player.id))
 
 
 @router.get(
@@ -52,6 +56,7 @@ def submit_guess(
     payload: GuessCreate,
     request: Request,  # pylint: disable=unused-argument
     db: Session = Depends(get_db),
+    current_player: Player = Depends(get_current_player),  # pylint: disable=unused-argument
 ) -> GuessResponse:
     response = services.game_service.submit_guess(db, id, payload.value)
     if response.result == "too low":
