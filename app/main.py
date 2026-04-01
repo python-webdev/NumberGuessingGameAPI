@@ -14,7 +14,7 @@ from app.core.logging import logger
 from app.core.middleware import RequestLoggingMiddleware
 from app.core.rate_limit import limiter
 from app.database import get_db
-from app.routers import games, players
+from app.routers import auth, games, players
 from app.schemas.database import DatabaseCheck
 from app.schemas.health import HealthResponse
 
@@ -51,9 +51,6 @@ app = FastAPI(
     contact={
         "name": "Number Guessing Game API",
     },
-    license_info={
-        "name": "MIT",
-    },
 )
 
 app.state.limiter = limiter
@@ -66,6 +63,7 @@ app.add_middleware(RequestLoggingMiddleware)
 # Error handlers
 register_exception_handlers(app)
 
+app.include_router(auth.router, prefix="/api/v1")
 app.include_router(players.router, prefix="/api/v1")
 app.include_router(games.router, prefix="/api/v1")
 
