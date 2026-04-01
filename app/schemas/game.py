@@ -5,7 +5,7 @@ from pydantic import UUID4, BaseModel
 
 
 class GameCreate(BaseModel):
-    player_id: UUID4
+    player_id: Optional[UUID4] = None
 
 
 class GameResponse(BaseModel):

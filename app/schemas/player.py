@@ -20,11 +20,19 @@ def validate_username(value: str) -> str:
 
 class PlayerCreate(BaseModel):
     username: str
+    password: str
 
     @field_validator("username")
     @classmethod
     def username_must_be_valid(cls, username: str) -> str:
         return validate_username(username)
+
+    @field_validator("password")
+    @classmethod
+    def password_must_be_valid(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("Password must be at least 8 characters")
+        return v
 
 
 class PlayerUpdate(BaseModel):
@@ -46,3 +54,12 @@ class PlayerResponse(BaseModel):
 
 class PlayerSearchParams(BaseModel):
     username: Optional[str] = None  # Filter by username (partial match)
+
+
+class TokenData(BaseModel):
+    sub: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
