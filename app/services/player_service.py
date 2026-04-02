@@ -1,6 +1,7 @@
 import uuid
 
 from fastapi import HTTPException
+from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from app.models.player import Player
@@ -12,6 +13,8 @@ from app.schemas.player import (
     PlayerUpdate,
 )
 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 
 def create_player(db: Session, payload: PlayerCreate) -> PlayerResponse:
     # Check if the username already exists
@@ -20,7 +23,7 @@ def create_player(db: Session, payload: PlayerCreate) -> PlayerResponse:
     )
     if existing_player:
         raise HTTPException(status_code=400, detail="Username already exists")
-    new_player = Player(username=payload.username)
+    new_player = Player(username=payload.username, password=pwd_context.hash(payload.password))
     db.add(new_player)
     db.commit()
     db.refresh(new_player)

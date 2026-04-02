@@ -11,7 +11,7 @@ from app.services.player_service import create_player
 class TestCreateGame:
     def test_create_game_successfully(self, db: Session) -> None:
         player = create_player(
-            db, payload=PlayerCreate(username="game_creator")
+            db, payload=PlayerCreate(username="game_creator", password="testpassword")
         )
         game = create_game(db, str(player.id))
         assert game.status == "active"
@@ -19,7 +19,7 @@ class TestCreateGame:
 
     def test_raises_if_active_game_exists(self, db: Session) -> None:
         player = create_player(
-            db, payload=PlayerCreate(username="active_game_player")
+            db, payload=PlayerCreate(username="active_game_player", password="testpassword")
         )
         create_game(db, str(player.id))
         with pytest.raises(HTTPException) as exc_info:
@@ -34,7 +34,7 @@ class TestCreateGame:
 class TestSubmitGuess:
     def test_returns_too_low(self, db: Session) -> None:
         player = create_player(
-            db, payload=PlayerCreate(username="guess_tester")
+            db, payload=PlayerCreate(username="guess_tester", password="testpassword")
         )
         game = create_game(db, str(player.id))
         # Manually set the secret number for testing
@@ -48,7 +48,7 @@ class TestSubmitGuess:
 
     def test_returns_too_high(self, db: Session) -> None:
         player = create_player(
-            db, payload=PlayerCreate(username="guess_tester2")
+            db, payload=PlayerCreate(username="guess_tester2", password="testpassword")
         )
         game = create_game(db, str(player.id))
         # Manually set the secret number for testing
@@ -62,7 +62,7 @@ class TestSubmitGuess:
 
     def test_correct_guess_wins_game(self, db: Session) -> None:
         player = create_player(
-            db, payload=PlayerCreate(username="winner_tester")
+            db, payload=PlayerCreate(username="winner_tester", password="testpassword")
         )
         game = create_game(db, str(player.id))
         # Manually set the secret number for testing
@@ -80,7 +80,7 @@ class TestSubmitGuess:
 
     def test_reveals_secret_number_on_win(self, db: Session) -> None:
         player = create_player(
-            db, payload=PlayerCreate(username="secret_reveal_tester")
+            db, payload=PlayerCreate(username="secret_reveal_tester", password="testpassword")
         )
         game = create_game(db, str(player.id))
         # Manually set the secret number for testing
@@ -95,7 +95,7 @@ class TestSubmitGuess:
 
     def test_secret_number_hidden_during_active_game(self, db: Session) -> None:
         player = create_player(
-            db, payload=PlayerCreate(username="secret_hidden_tester")
+            db, payload=PlayerCreate(username="secret_hidden_tester", password="testpassword")
         )
         game = create_game(db, str(player.id))
         # Manually set the secret number for testing
@@ -110,7 +110,7 @@ class TestSubmitGuess:
 
     def test_game_lost_when_attemps_exhausted(self, db: Session) -> None:
         player = create_player(
-            db, payload=PlayerCreate(username="loser_tester")
+            db, payload=PlayerCreate(username="loser_tester", password="testpassword")
         )
         game = create_game(db, str(player.id))
         # Manually set the secret number and max attempts for testing
@@ -132,7 +132,7 @@ class TestSubmitGuess:
     # Invariant tests - these must never break
     def test_cannot_guess_on_finished_game(self, db: Session) -> None:
         player = create_player(
-            db, payload=PlayerCreate(username="finished_game_tester")
+            db, payload=PlayerCreate(username="finished_game_tester", password="testpassword")
         )
         game = create_game(db, str(player.id))
         # Manually set the secret number and max attempts for testing
@@ -155,7 +155,7 @@ class TestSubmitGuess:
 
     def test_attempts_increment_on_each_guess(self, db: Session) -> None:
         player = create_player(
-            db, payload=PlayerCreate(username="attempts_increment_tester")
+            db, payload=PlayerCreate(username="attempts_increment_tester", password="testpassword")
         )
         game = create_game(db, str(player.id))
         # Manually set the secret number for testing

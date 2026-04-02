@@ -8,13 +8,13 @@ from app.services.player_service import create_player, get_player, update_player
 
 class TestCreatePlayer:
     def test_create_player_success(self, db: Session) -> None:
-        player = create_player(db, payload=PlayerCreate(username="test_player"))
+        player = create_player(db, payload=PlayerCreate(username="test_player", password="testpassword"))
         assert player.username == "test_player"
 
     def test_raises_if_username_already_exists(self, db: Session) -> None:
-        create_player(db, payload=PlayerCreate(username="duplicate_player"))
+        create_player(db, payload=PlayerCreate(username="duplicate_player", password="testpassword"))
         with pytest.raises(HTTPException) as exc_info:
-            create_player(db, payload=PlayerCreate(username="duplicate_player"))
+            create_player(db, payload=PlayerCreate(username="duplicate_player", password="testpassword"))
         assert exc_info.value.status_code == 400
         assert exc_info.value.detail == "Username already exists"
 
@@ -22,7 +22,7 @@ class TestCreatePlayer:
 class TestGetPlayer:
     def test_returns_player_if_exists(self, db: Session) -> None:
         created_player = create_player(
-            db, payload=PlayerCreate(username="existing_player")
+            db, payload=PlayerCreate(username="existing_player", password="testpassword")
         )
         retrieved_player = get_player(db, player_id=str(created_player.id))
         assert retrieved_player.id == created_player.id
@@ -38,7 +38,7 @@ class TestGetPlayer:
 class TestUpdatePlayer:
     def test_update_username_successfully(self, db: Session) -> None:
         player = create_player(
-            db, payload=PlayerCreate(username="player_to_update")
+            db, payload=PlayerCreate(username="player_to_update", password="testpassword")
         )
         updated_player = update_player(
             db,
@@ -49,8 +49,8 @@ class TestUpdatePlayer:
         assert updated_player.username == "updated_player"
 
     def test_raises_if_username_already_exists(self, db: Session) -> None:
-        create_player(db, payload=PlayerCreate(username="player1"))
-        player2 = create_player(db, payload=PlayerCreate(username="player2"))
+        create_player(db, payload=PlayerCreate(username="player1", password="testpassword"))
+        player2 = create_player(db, payload=PlayerCreate(username="player2", password="testpassword"))
         with pytest.raises(HTTPException) as exc_info:
             update_player(
                 db,
